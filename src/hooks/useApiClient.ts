@@ -15,7 +15,7 @@ interface UseApiClientReturn {
     error: string | null;
     getExams: () => Promise<ExamListResponse | null>;
     startExam: (examId: string, mode: ExamMode, questionCount?: number) => Promise<StartExamResponse | null>;
-    submitExam: (examId: string, answers: Record<string, string>, startTime: Date) => Promise<SubmitExamResponse | null>;
+    submitExam: (examId: string, answers: Record<string, string>, startTime: Date | string) => Promise<SubmitExamResponse | null>;
     getResults: (attemptId: string) => Promise<ExamResultsResponse | null>;
     clearError: () => void;
 }
@@ -77,13 +77,18 @@ export function useApiClient(): UseApiClientReturn {
     const submitExam = useCallback(async (
         examId: string,
         answers: Record<string, string>,
-        startTime: Date
+        startTime: Date | string
     ): Promise<SubmitExamResponse | null> => {
+        // Convert startTime to ISO string if it's a Date, otherwise use as-is
+        const startTimeISO = startTime instanceof Date 
+            ? startTime.toISOString() 
+            : new Date(startTime).toISOString();
+
         return handleRequest<SubmitExamResponse>(`/api/exams/${examId}/submit`, {
             method: 'POST',
             body: JSON.stringify({
                 answers,
-                startTime: startTime.toISOString()
+                startTime: startTimeISO
             }),
         });
     }, [handleRequest]);
