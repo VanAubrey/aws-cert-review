@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import type { ExamSession } from '@/types';
@@ -43,7 +44,6 @@ interface ExamActions {
     setError: (error: string | null) => void;
 
     // Utilities
-    getProgress: () => { answered: number; flagged: number; total: number };
     isQuestionAnswered: (questionId: string) => boolean;
     isQuestionFlagged: (questionId: string) => boolean;
 }
@@ -247,19 +247,6 @@ export const useExamStore = create<ExamStore>()(
                 },
 
                 // Utilities
-                getProgress: () => {
-                    const { session } = get();
-                    if (!session) {
-                        return { answered: 0, flagged: 0, total: 0 };
-                    }
-
-                    const answered = Object.keys(session.answers).length;
-                    const flagged = Object.values(session.flags).filter(Boolean).length;
-                    const total = session.questions.length;
-
-                    return { answered, flagged, total };
-                },
-
                 isQuestionAnswered: (questionId) => {
                     const { session } = get();
                     return !!session?.answers[questionId];
@@ -307,21 +294,21 @@ export const useIsCurrentFlagged = () =>
         return !!state.session.flags[currentQuestion.id];
     });
 
-export const useExamProgress = () =>
-    useExamStore((state) => state.getProgress());
-
 export const useTimeRemaining = () =>
     useExamStore((state) => state.session?.timeRemaining || null);
 
 export const useExamMode = () =>
     useExamStore((state) => state.session?.mode || null);
 
-export const useCanNavigate = () =>
-    useExamStore((state) => {
-        if (!state.session) return { canNext: false, canPrev: false };
+export const useCanNavigate = () => {
+    const session = useExamStore((state) => state.session);
+    
+    return useMemo(() => {
+        if (!session) return { canNext: false, canPrev: false };
 
         return {
-            canNext: state.session.currentIndex < state.session.questions.length - 1,
-            canPrev: state.session.currentIndex > 0,
+            canNext: session.currentIndex < session.questions.length - 1,
+            canPrev: session.currentIndex > 0,
         };
-    });
+    }, [session?.currentIndex, session?.questions?.length]);
+};

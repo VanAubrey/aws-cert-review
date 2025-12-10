@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useExamStore } from './useExamStore';
 
 export function useIsExamActive(): boolean {
@@ -5,19 +6,49 @@ export function useIsExamActive(): boolean {
 }
 
 export function useExamMetadata() {
-    return useExamStore((state) => {
-        if (!state.session) return null;
+    const session = useExamStore((state) => state.session);
+    
+    return useMemo(() => {
+        if (!session) return null;
 
         return {
-            examId: state.session.examId,
-            examCode: state.session.examCode,
-            examTitle: state.session.examTitle,
-            duration: state.session.duration,
-            passingScore: state.session.passingScore,
-            mode: state.session.mode,
-            startTime: state.session.startTime,
+            examId: session.examId,
+            examCode: session.examCode,
+            examTitle: session.examTitle,
+            duration: session.duration,
+            passingScore: session.passingScore,
+            mode: session.mode,
+            startTime: session.startTime,
         };
-    });
+    }, [
+        session?.examId,
+        session?.examCode,
+        session?.examTitle,
+        session?.duration,
+        session?.passingScore,
+        session?.mode,
+        session?.startTime
+    ]);
+}
+
+export function useExamProgress() {
+    const session = useExamStore((state) => state.session);
+    
+    return useMemo(() => {
+        if (!session) {
+            return { answered: 0, flagged: 0, total: 0 };
+        }
+
+        const answered = Object.keys(session.answers).length;
+        const flagged = Object.values(session.flags).filter(Boolean).length;
+        const total = session.questions.length;
+
+        return { answered, flagged, total };
+    }, [
+        session?.answers,
+        session?.flags,
+        session?.questions?.length
+    ]);
 }
 
 export function useAllQuestions() {
