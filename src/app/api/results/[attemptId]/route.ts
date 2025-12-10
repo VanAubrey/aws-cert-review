@@ -66,6 +66,7 @@ export async function GET(
 
         const results = {
             attemptId: attempt.id,
+            examId: attempt.exam.id,
             examCode: attempt.exam.code,
             examTitle: attempt.exam.title,
             score: attempt.score || 0,

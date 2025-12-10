@@ -88,6 +88,7 @@ export interface QuestionResult {
 // Complete exam results
 export interface ExamResults {
     attemptId: string;
+    examId: string;
     examCode: string;
     examTitle: string;
     score: number; // 0 - 1000
